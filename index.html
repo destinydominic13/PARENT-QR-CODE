@@ -29,30 +29,6 @@
         .fade-in {
             animation: fadeIn 0.3s ease-in;
         }
-        .file-input-label {
-            display: inline-block;
-            padding: 8px 12px;
-            background-color: #f3f4f6;
-            border: 1px dashed #d1d5db;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .file-input-label:hover {
-            background-color: #e5e7eb;
-            border-color: #9ca3af;
-        }
-        .file-input {
-            display: none;
-        }
-        .preview-image {
-            max-width: 100px;
-            max-height: 100px;
-            object-fit: cover;
-            border-radius: 0.25rem;
-            margin-top: 0.5rem;
-            border: 1px solid #e5e7eb;
-        }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -88,29 +64,15 @@
                             <label class="block text-gray-700 font-medium mb-2" for="parentName">Parent Name</label>
                             <input type="text" id="parentName" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Enter your full name" required>
                         </div>
-                        
+                                                
                         <div>
                             <label class="block text-gray-700 font-medium mb-2" for="parentPhone">Phone Number</label>
                             <input type="tel" id="parentPhone" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Enter your phone number" required>
                         </div>
-                        
+                                                
                         <div>
                             <label class="block text-gray-700 font-medium mb-2" for="parentEmail">Email Address</label>
                             <input type="email" id="parentEmail" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Enter your email" required>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-gray-700 font-medium mb-2">Parent Photo</label>
-                            <label for="parentPhoto" class="file-input-label">
-                                <i class="fas fa-camera mr-2"></i>Upload Parent Photo
-                                <input type="file" id="parentPhoto" class="file-input" accept="image/*">
-                            </label>
-                            <div id="parentPhotoPreview" class="hidden">
-                                <img id="parentPhotoPreviewImg" class="preview-image" src="#" alt="Parent photo preview">
-                                <button type="button" onclick="removePhoto('parentPhoto')" class="ml-2 text-red-500 text-sm">
-                                    <i class="fas fa-trash-alt mr-1"></i>Remove
-                                </button>
-                            </div>
                         </div>
 
                         <div id="childrenContainer">
@@ -120,12 +82,12 @@
                                     <i class="fas fa-plus-circle mr-1"></i> Add Child
                                 </button>
                             </div>
-                            
+                                                        
                             <div class="space-y-4" id="childrenList">
                                 <!-- Child inputs will be added here -->
                             </div>
                         </div>
-                        
+                                                
                         <div id="authorizedPersonsContainer">
                             <div class="flex justify-between items-center mb-2">
                                 <label class="block text-gray-700 font-medium">Authorized Pickup Persons</label>
@@ -133,7 +95,7 @@
                                     <i class="fas fa-plus-circle mr-1"></i> Add Person
                                 </button>
                             </div>
-                            
+                                                        
                             <div class="space-y-4" id="authorizedPersonsList">
                                 <!-- Authorized persons will be added here -->
                             </div>
@@ -163,14 +125,14 @@
                                 </button>
                             </div>
                         </div>
-                        
+                                                
                         <div class="mt-8">
                             <h4 class="font-semibold text-gray-700 mb-3">Authorized to pick up:</h4>
                             <ul id="authorizedChildrenList" class="space-y-2">
                                 <!-- Children list will be added here -->
                             </ul>
                         </div>
-                        
+                                                
                         <div class="mt-6">
                             <h4 class="font-semibold text-gray-700 mb-3">Authorized Pickup Persons:</h4>
                             <ul id="authorizedPersonsDisplayList" class="space-y-2">
@@ -232,9 +194,6 @@
         const authorizedPersonsList = document.getElementById('authorizedPersonsList');
         const addPersonBtn = document.getElementById('addPersonBtn');
         const authorizedPersonsDisplayList = document.getElementById('authorizedPersonsDisplayList');
-        const parentPhoto = document.getElementById('parentPhoto');
-        const parentPhotoPreview = document.getElementById('parentPhotoPreview');
-        const parentPhotoPreviewImg = document.getElementById('parentPhotoPreviewImg');
 
         // Track child and person counts for unique IDs
         let childCount = 0;
@@ -244,21 +203,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             addChildInput();
             addAuthorizedPerson();
-            
-            // Set up image preview for parent photo
-            parentPhoto.addEventListener('change', function(e) {
-                if (e.target.files.length > 0) {
-                    const file = e.target.files[0];
-                    const reader = new FileReader();
-                    
-                    reader.onload = function(event) {
-                        parentPhotoPreviewImg.src = event.target.result;
-                        parentPhotoPreview.classList.remove('hidden');
-                    }
-                    
-                    reader.readAsDataURL(file);
-                }
-            });
         });
 
         // Add child input field
@@ -302,41 +246,10 @@
                             class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                             placeholder="Enter course name">
                     </div>
-                    <div>
-                        <label class="block text-sm text-gray-600 mb-1">Child Photo</label>
-                        <label for="${childId}-photo" class="file-input-label">
-                            <i class="fas fa-camera mr-2"></i>Upload Child Photo
-                            <input type="file" id="${childId}-photo" class="file-input" accept="image/*">
-                        </label>
-                        <div id="${childId}-photo-preview" class="hidden">
-                            <img id="${childId}-photo-preview-img" class="preview-image" src="#" alt="Child photo preview">
-                            <button type="button" onclick="removePhoto('${childId}-photo')" class="ml-2 text-red-500 text-sm">
-                                <i class="fas fa-trash-alt mr-1"></i>Remove
-                            </button>
-                        </div>
-                    </div>
                 </div>
             `;
 
             childrenList.appendChild(childDiv);
-
-            // Set up image preview for child photo
-            const childPhotoInput = document.getElementById(`${childId}-photo`);
-            childPhotoInput.addEventListener('change', function(e) {
-                if (e.target.files.length > 0) {
-                    const file = e.target.files[0];
-                    const reader = new FileReader();
-                    const previewDiv = document.getElementById(`${childId}-photo-preview`);
-                    const previewImg = document.getElementById(`${childId}-photo-preview-img`);
-                    
-                    reader.onload = function(event) {
-                        previewImg.src = event.target.result;
-                        previewDiv.classList.remove('hidden');
-                    }
-                    
-                    reader.readAsDataURL(file);
-                }
-            });
 
             // Add animation
             setTimeout(() => {
@@ -398,41 +311,10 @@
                             class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                             placeholder="Enter phone number" required>
                     </div>
-                    <div>
-                        <label class="block text-sm text-gray-600 mb-1">Photo</label>
-                        <label for="${personId}-photo" class="file-input-label">
-                            <i class="fas fa-camera mr-2"></i>Upload Person Photo
-                            <input type="file" id="${personId}-photo" class="file-input" accept="image/*">
-                        </label>
-                        <div id="${personId}-photo-preview" class="hidden">
-                            <img id="${personId}-photo-preview-img" class="preview-image" src="#" alt="Person photo preview">
-                            <button type="button" onclick="removePhoto('${personId}-photo')" class="ml-2 text-red-500 text-sm">
-                                <i class="fas fa-trash-alt mr-1"></i>Remove
-                            </button>
-                        </div>
-                    </div>
                 </div>
             `;
 
             authorizedPersonsList.appendChild(personDiv);
-
-            // Set up image preview for person photo
-            const personPhotoInput = document.getElementById(`${personId}-photo`);
-            personPhotoInput.addEventListener('change', function(e) {
-                if (e.target.files.length > 0) {
-                    const file = e.target.files[0];
-                    const reader = new FileReader();
-                    const previewDiv = document.getElementById(`${personId}-photo-preview`);
-                    const previewImg = document.getElementById(`${personId}-photo-preview-img`);
-                    
-                    reader.onload = function(event) {
-                        previewImg.src = event.target.result;
-                        previewDiv.classList.remove('hidden');
-                    }
-                    
-                    reader.readAsDataURL(file);
-                }
-            });
 
             // Add animation
             setTimeout(() => {
@@ -459,15 +341,6 @@
             }
         });
 
-        // Function to remove photo preview
-        function removePhoto(inputId) {
-            const input = document.getElementById(inputId);
-            const previewDiv = document.getElementById(`${inputId}-preview`);
-            
-            input.value = '';
-            previewDiv.classList.add('hidden');
-        }
-
         // QR Code Generation
         parentForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -475,11 +348,11 @@
             const parentName = document.getElementById('parentName').value;
             const parentPhone = document.getElementById('parentPhone').value;
             const parentEmail = document.getElementById('parentEmail').value;
-            
+
             // Get all children data
             const children = [];
             const childInputs = childrenList.querySelectorAll('.child-card');
-            
+
             if (childInputs.length === 0) {
                 Swal.fire({
                     icon: 'error',
@@ -495,24 +368,20 @@
                     name: document.getElementById(`${childId}-name`).value,
                     age: document.getElementById(`${childId}-age`).value,
                     school: document.getElementById(`${childId}-school`).value,
-                    course: document.getElementById(`${childId}-course`).value,
-                    photo: document.getElementById(`${childId}-photo`).files[0] ? 
-                          document.getElementById(`${childId}-photo-preview-img`).src : null
+                    course: document.getElementById(`${childId}-course`).value
                 });
             });
 
             // Get all authorized persons data
             const authorizedPersons = [];
             const personInputs = authorizedPersonsList.querySelectorAll('.authorized-person');
-            
+
             personInputs.forEach((personDiv, index) => {
                 const personId = `person-${index + 1}`;
                 authorizedPersons.push({
                     name: document.getElementById(`${personId}-name`).value,
                     relationship: document.getElementById(`${personId}-relationship`).value,
-                    phone: document.getElementById(`${personId}-phone`).value,
-                    photo: document.getElementById(`${personId}-photo`).files[0] ? 
-                          document.getElementById(`${personId}-photo-preview-img`).src : null
+                    phone: document.getElementById(`${personId}-phone`).value
                 });
             });
 
@@ -521,8 +390,7 @@
                 parent: {
                     name: parentName,
                     phone: parentPhone,
-                    email: parentEmail,
-                    photo: parentPhoto.files[0] ? parentPhotoPreviewImg.src : null
+                    email: parentEmail
                 },
                 children,
                 authorizedPersons,
@@ -542,10 +410,9 @@
                 li.className = 'flex items-center py-2 border-b border-gray-100';
                 li.innerHTML = `
                     <div class="flex items-center">
-                        ${child.photo ? `<img src="${child.photo}" class="w-10 h-10 rounded-full object-cover mr-3" alt="${child.name}">` : 
-                          `<div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mr-3">
+                        <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mr-3">
                             <i class="fas fa-child"></i>
-                          </div>`}
+                        </div>
                         <div>
                             <span class="font-medium">${child.name}</span>
                             <div class="text-xs text-gray-500">
@@ -563,10 +430,9 @@
                 li.className = 'flex items-center py-2 border-b border-gray-100';
                 li.innerHTML = `
                     <div class="flex items-center">
-                        ${person.photo ? `<img src="${person.photo}" class="w-10 h-10 rounded-full object-cover mr-3" alt="${person.name}">` : 
-                          `<div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mr-3">
+                        <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mr-3">
                             <i class="fas fa-user"></i>
-                          </div>`}
+                        </div>
                         <div>
                             <span class="font-medium">${person.name}</span>
                             <div class="text-xs text-gray-500">
