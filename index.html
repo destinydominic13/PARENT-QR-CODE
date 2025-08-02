@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parent QR Generator | School Pickup System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .qr-container {
+            transition: all 0.3s ease;
+        }
+        .qr-container:hover {
+            transform: scale(1.03);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        .child-card {
+            transition: all 0.2s ease;
+        }
+        .child-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-100">
+    <div class="gradient-bg text-white py-8 shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-bold mb-2">Parent QR Generator</h1>
+                    <p class="text-lg opacity-90">Secure school pickup system</p>
+                </div>
+                <!-- <a href="teacher.html" class="px-6 py-2 bg-white text-purple-700 rounded-full font-semibold hover:bg-gray-100 transition">
+                    <i class="fas fa-chalkboard-teacher mr-2"></i>Teacher Login
+                </a> -->
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-12">
+        <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="md:flex">
+                <div class="md:w-1/2 p-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Generate Your Parent QR Code</h2>
+                    <form id="parentForm" class="space-y-6">
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2" for="parentName">Parent Name</label>
+                            <input type="text" id="parentName" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Enter your full name" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2" for="parentPhone">Phone Number</label>
+                            <input type="tel" id="parentPhone" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Enter your phone number" required>
+                        </div>
+
+                        <div id="childrenContainer">
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="block text-gray-700 font-medium">Authorized Children</label>
+                                <button type="button" id="addChildBtn" class="text-sm text-purple-600 hover:text-purple-800 font-medium flex items-center">
+                                    <i class="fas fa-plus-circle mr-1"></i> Add Child
+                                </button>
+                            </div>
+                            
+                            <div class="space-y-4" id="childrenList">
+                                <!-- Child inputs will be added here -->
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full gradient-bg text-white py-3 rounded-lg font-semibold hover:opacity-90 transition flex items-center justify-center">
+                            <i class="fas fa-qrcode mr-2"></i> Generate Parent QR Code
+                        </button>
+                    </form>
+                </div>
+                <div class="md:w-1/2 bg-gray-50 p-8">
+                    <div id="qrPlaceholder" class="text-center text-gray-500 h-full flex flex-col items-center justify-center">
+                        <i class="fas fa-qrcode text-6xl mb-4 opacity-30"></i>
+                        <p>Your parent QR code will appear here</p>
+                        <p class="text-sm mt-2 text-gray-400">This single QR code will authorize you to pick up all your registered children</p>
+                    </div>
+                    <div id="qrResult" class="hidden">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Your Parent QR Code</h3>
+                        <div class="flex flex-col items-center">
+                            <div class="qr-container bg-white p-6 rounded-lg shadow-inner text-center mb-4">
+                                <canvas id="parentQrCanvas"></canvas>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-gray-700 mb-4"><span class="font-semibold" id="displayParentName"></span>'s Authorization QR</p>
+                                <button id="downloadQrBtn" class="download-qr px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition">
+                                    <i class="fas fa-download mr-2"></i>Download QR Code
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8">
+                            <h4 class="font-semibold text-gray-700 mb-3">Authorized to pick up:</h4>
+                            <ul id="authorizedChildrenList" class="space-y-2">
+                                <!-- Children list will be added here -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-12 grid md:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <div class="text-purple-600 mb-4">
+                    <i class="fas fa-shield-alt text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-2">Secure Verification</h3>
+                <p class="text-gray-600">Your QR code contains encrypted information that can only be verified by authorized school staff.</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <div class="text-purple-600 mb-4">
+                    <i class="fas fa-user-check text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-2">All Children Included</h3>
+                <p class="text-gray-600">One QR code authorizes you to pick up all your registered children for convenience.</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <div class="text-purple-600 mb-4">
+                    <i class="fas fa-mobile-alt text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-2">Mobile Friendly</h3>
+                <p class="text-gray-600">Save the QR code on your phone or print it for easy access during pickup.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="gradient-bg text-white py-8 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p>© 2023 School Pickup Verification System. All rights reserved.</p>
+            <div class="flex justify-center space-x-6 mt-4">
+                <a href="#" class="hover:text-gray-200"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" class="hover:text-gray-200"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="hover:text-gray-200"><i class="fab fa-instagram"></i></a>
+                <a href="#" class="hover:text-gray-200"><i class="fab fa-linkedin-in"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // DOM Elements
+        const parentForm = document.getElementById('parentForm');
+        const qrPlaceholder = document.getElementById('qrPlaceholder');
+        const qrResult = document.getElementById('qrResult');
+        const childrenList = document.getElementById('childrenList');
+        const addChildBtn = document.getElementById('addChildBtn');
+        const authorizedChildrenList = document.getElementById('authorizedChildrenList');
+        const displayParentName = document.getElementById('displayParentName');
+        const downloadQrBtn = document.getElementById('downloadQrBtn');
+        
+        // Track child count for unique IDs
+        let childCount = 0;
+
+        // Add first child input by default
+        document.addEventListener('DOMContentLoaded', () => {
+            addChildInput();
+        });
+
+        // Add child input field
+        addChildBtn.addEventListener('click', addChildInput);
+
+        function addChildInput() {
+            childCount++;
+            const childId = `child-${childCount}`;
+
+            const childDiv = document.createElement('div');
+            childDiv.className = 'child-card bg-gray-50 p-4 rounded-lg border border-gray-200 fade-in';
+            childDiv.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <label class="block text-gray-700 font-medium">Child ${childCount}</label>
+                    ${childCount > 1 ? `<button type="button" class="text-red-500 hover:text-red-700 remove-child" data-child="${childId}">
+                        <i class="fas fa-times"></i>
+                    </button>` : ''}
+                </div>
+                <input type="text" id="${childId}" 
+                     class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+                     placeholder="Enter child's full name" required>
+            `;
+
+            childrenList.appendChild(childDiv);
+
+            // Add animation
+            setTimeout(() => {
+                childDiv.classList.remove('fade-in');
+            }, 300);
+        }
+
+        // Remove child input field
+        childrenList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-child') || e.target.closest('.remove-child')) {
+                const button = e.target.classList.contains('remove-child') ? e.target : e.target.closest('.remove-child');
+                const childId = button.getAttribute('data-child');
+                const childDiv = document.getElementById(childId).closest('.child-card');
+
+                childDiv.classList.add('fade-out');
+                setTimeout(() => {
+                    childDiv.remove();
+                    // Renumber remaining children
+                    const children = childrenList.querySelectorAll('.child-card');
+                    children.forEach((child, index) => {
+                        child.querySelector('label').textContent = `Child ${index + 1}`;
+                    });
+                }, 300);
+            }
+        });
+
+        // QR Code Generation
+        parentForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const parentName = document.getElementById('parentName').value;
+            const parentPhone = document.getElementById('parentPhone').value;
+            const childInputs = childrenList.querySelectorAll('input[type="text"]');
+
+            if (childInputs.length === 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'No Children Added',
+                    text: 'Please add at least one child to generate the parent QR code.'
+                });
+                return;
+            }
+
+            // Get all children names
+            const children = [];
+            childInputs.forEach(input => {
+                children.push(input.value);
+            });
+
+            // Create a data object
+            const data = {
+                parentName,
+                parentPhone,
+                children,
+                timestamp: new Date().toISOString()
+            };
+
+            // Convert to JSON string for QR code
+            const qrDataString = JSON.stringify(data);
+
+            // Clear previous children list
+            authorizedChildrenList.innerHTML = '';
+
+            // Add children to the authorized list
+            children.forEach(child => {
+                const li = document.createElement('li');
+                li.className = 'flex items-center';
+                li.innerHTML = `
+                    <i class="fas fa-child text-purple-500 mr-2"></i>
+                    <span>${child}</span>
+                `;
+                authorizedChildrenList.appendChild(li);
+            });
+
+            // Set parent name display
+            displayParentName.textContent = parentName;
+
+            // Generate QR code
+            QRCode.toCanvas(document.getElementById('parentQrCanvas'), qrDataString, {
+                width: 220,
+                margin: 2,
+                color: {
+                    dark: '#000000',
+                    light: '#ffffff'
+                }
+            }, (error) => {
+                if (error) {
+                    console.error(error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to generate QR code. Please try again.'
+                    });
+                    return;
+                }
+
+                // Show the QR code
+                qrPlaceholder.classList.add('hidden');
+                qrResult.classList.remove('hidden');
+
+                // Scroll to the QR code
+                qrResult.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+        });
+
+        // Download QR Code
+        downloadQrBtn.addEventListener('click', () => {
+            const parentName = document.getElementById('parentName').value;
+            const canvas = document.getElementById('parentQrCanvas');
+            const link = document.createElement('a');
+            link.download = `${parentName}_parent_qr.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+    </script>
+</body>
+</html>
