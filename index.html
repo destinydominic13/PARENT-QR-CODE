@@ -29,9 +29,40 @@
         .fade-in {
             animation: fadeIn 0.3s ease-in;
         }
+        .file-input-label {
+            display: inline-block;
+            padding: 8px 12px;
+            background-color: #f3f4f6;
+            border: 1px dashed #d1d5db;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .file-input-label:hover {
+            background-color: #e5e7eb;
+            border-color: #9ca3af;
+        }
+        .file-input {
+            display: none;
+        }
+        .preview-image {
+            max-width: 100px;
+            max-height: 100px;
+            object-fit: cover;
+            border-radius: 0.25rem;
+            margin-top: 0.5rem;
+            border: 1px solid #e5e7eb;
+        }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+        .authorized-person {
+            background-color: #f9fafb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid #e5e7eb;
         }
     </style>
 </head>
@@ -43,15 +74,12 @@
                     <h1 class="text-3xl md:text-4xl font-bold mb-2">Parent QR Generator</h1>
                     <p class="text-lg opacity-90">Secure school pickup system</p>
                 </div>
-                <!-- <a href="teacher.html" class="px-6 py-2 bg-white text-purple-700 rounded-full font-semibold hover:bg-gray-100 transition">
-                    <i class="fas fa-chalkboard-teacher mr-2"></i>Teacher Login
-                </a> -->
             </div>
         </div>
     </div>
 
     <div class="container mx-auto px-4 py-12">
-        <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="max-w-6xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
             <div class="md:flex">
                 <div class="md:w-1/2 p-8">
                     <h2 class="text-2xl font-bold text-gray-800 mb-6">Generate Your Parent QR Code</h2>
@@ -65,6 +93,25 @@
                             <label class="block text-gray-700 font-medium mb-2" for="parentPhone">Phone Number</label>
                             <input type="tel" id="parentPhone" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Enter your phone number" required>
                         </div>
+                        
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2" for="parentEmail">Email Address</label>
+                            <input type="email" id="parentEmail" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Enter your email" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">Parent Photo</label>
+                            <label for="parentPhoto" class="file-input-label">
+                                <i class="fas fa-camera mr-2"></i>Upload Parent Photo
+                                <input type="file" id="parentPhoto" class="file-input" accept="image/*">
+                            </label>
+                            <div id="parentPhotoPreview" class="hidden">
+                                <img id="parentPhotoPreviewImg" class="preview-image" src="#" alt="Parent photo preview">
+                                <button type="button" onclick="removePhoto('parentPhoto')" class="ml-2 text-red-500 text-sm">
+                                    <i class="fas fa-trash-alt mr-1"></i>Remove
+                                </button>
+                            </div>
+                        </div>
 
                         <div id="childrenContainer">
                             <div class="flex justify-between items-center mb-2">
@@ -76,6 +123,19 @@
                             
                             <div class="space-y-4" id="childrenList">
                                 <!-- Child inputs will be added here -->
+                            </div>
+                        </div>
+                        
+                        <div id="authorizedPersonsContainer">
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="block text-gray-700 font-medium">Authorized Pickup Persons</label>
+                                <button type="button" id="addPersonBtn" class="text-sm text-purple-600 hover:text-purple-800 font-medium flex items-center">
+                                    <i class="fas fa-plus-circle mr-1"></i> Add Person
+                                </button>
+                            </div>
+                            
+                            <div class="space-y-4" id="authorizedPersonsList">
+                                <!-- Authorized persons will be added here -->
                             </div>
                         </div>
 
@@ -108,6 +168,13 @@
                             <h4 class="font-semibold text-gray-700 mb-3">Authorized to pick up:</h4>
                             <ul id="authorizedChildrenList" class="space-y-2">
                                 <!-- Children list will be added here -->
+                            </ul>
+                        </div>
+                        
+                        <div class="mt-6">
+                            <h4 class="font-semibold text-gray-700 mb-3">Authorized Pickup Persons:</h4>
+                            <ul id="authorizedPersonsDisplayList" class="space-y-2">
+                                <!-- Authorized persons will be displayed here -->
                             </ul>
                         </div>
                     </div>
@@ -162,13 +229,36 @@
         const authorizedChildrenList = document.getElementById('authorizedChildrenList');
         const displayParentName = document.getElementById('displayParentName');
         const downloadQrBtn = document.getElementById('downloadQrBtn');
-        
-        // Track child count for unique IDs
+        const authorizedPersonsList = document.getElementById('authorizedPersonsList');
+        const addPersonBtn = document.getElementById('addPersonBtn');
+        const authorizedPersonsDisplayList = document.getElementById('authorizedPersonsDisplayList');
+        const parentPhoto = document.getElementById('parentPhoto');
+        const parentPhotoPreview = document.getElementById('parentPhotoPreview');
+        const parentPhotoPreviewImg = document.getElementById('parentPhotoPreviewImg');
+
+        // Track child and person counts for unique IDs
         let childCount = 0;
+        let personCount = 0;
 
         // Add first child input by default
         document.addEventListener('DOMContentLoaded', () => {
             addChildInput();
+            addAuthorizedPerson();
+            
+            // Set up image preview for parent photo
+            parentPhoto.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(event) {
+                        parentPhotoPreviewImg.src = event.target.result;
+                        parentPhotoPreview.classList.remove('hidden');
+                    }
+                    
+                    reader.readAsDataURL(file);
+                }
+            });
         });
 
         // Add child input field
@@ -187,12 +277,66 @@
                         <i class="fas fa-times"></i>
                     </button>` : ''}
                 </div>
-                <input type="text" id="${childId}" 
-                     class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
-                     placeholder="Enter child's full name" required>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Full Name</label>
+                        <input type="text" id="${childId}-name"
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            placeholder="Enter child's full name" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Age</label>
+                        <input type="number" id="${childId}-age"
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            placeholder="Enter child's age" min="1" max="18" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Current School</label>
+                        <input type="text" id="${childId}-school"
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            placeholder="Enter school name" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Bootcamp Course</label>
+                        <input type="text" id="${childId}-course"
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            placeholder="Enter course name">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Child Photo</label>
+                        <label for="${childId}-photo" class="file-input-label">
+                            <i class="fas fa-camera mr-2"></i>Upload Child Photo
+                            <input type="file" id="${childId}-photo" class="file-input" accept="image/*">
+                        </label>
+                        <div id="${childId}-photo-preview" class="hidden">
+                            <img id="${childId}-photo-preview-img" class="preview-image" src="#" alt="Child photo preview">
+                            <button type="button" onclick="removePhoto('${childId}-photo')" class="ml-2 text-red-500 text-sm">
+                                <i class="fas fa-trash-alt mr-1"></i>Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
             `;
 
             childrenList.appendChild(childDiv);
+
+            // Set up image preview for child photo
+            const childPhotoInput = document.getElementById(`${childId}-photo`);
+            childPhotoInput.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    const reader = new FileReader();
+                    const previewDiv = document.getElementById(`${childId}-photo-preview`);
+                    const previewImg = document.getElementById(`${childId}-photo-preview-img`);
+                    
+                    reader.onload = function(event) {
+                        previewImg.src = event.target.result;
+                        previewDiv.classList.remove('hidden');
+                    }
+                    
+                    reader.readAsDataURL(file);
+                }
+            });
 
             // Add animation
             setTimeout(() => {
@@ -205,7 +349,7 @@
             if (e.target.classList.contains('remove-child') || e.target.closest('.remove-child')) {
                 const button = e.target.classList.contains('remove-child') ? e.target : e.target.closest('.remove-child');
                 const childId = button.getAttribute('data-child');
-                const childDiv = document.getElementById(childId).closest('.child-card');
+                const childDiv = document.getElementById(`${childId}-name`).closest('.child-card');
 
                 childDiv.classList.add('fade-out');
                 setTimeout(() => {
@@ -219,14 +363,123 @@
             }
         });
 
+        // Add authorized person input field
+        addPersonBtn.addEventListener('click', addAuthorizedPerson);
+
+        function addAuthorizedPerson() {
+            personCount++;
+            const personId = `person-${personCount}`;
+
+            const personDiv = document.createElement('div');
+            personDiv.className = 'authorized-person fade-in';
+            personDiv.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <label class="block text-gray-700 font-medium">Authorized Person ${personCount}</label>
+                    ${personCount > 1 ? `<button type="button" class="text-red-500 hover:text-red-700 remove-person" data-person="${personId}">
+                        <i class="fas fa-times"></i>
+                    </button>` : ''}
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Full Name</label>
+                        <input type="text" id="${personId}-name"
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            placeholder="Enter person's full name" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Relationship</label>
+                        <input type="text" id="${personId}-relationship"
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            placeholder="E.g. Aunt, Uncle, Family Friend" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Phone Number</label>
+                        <input type="tel" id="${personId}-phone"
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            placeholder="Enter phone number" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Photo</label>
+                        <label for="${personId}-photo" class="file-input-label">
+                            <i class="fas fa-camera mr-2"></i>Upload Person Photo
+                            <input type="file" id="${personId}-photo" class="file-input" accept="image/*">
+                        </label>
+                        <div id="${personId}-photo-preview" class="hidden">
+                            <img id="${personId}-photo-preview-img" class="preview-image" src="#" alt="Person photo preview">
+                            <button type="button" onclick="removePhoto('${personId}-photo')" class="ml-2 text-red-500 text-sm">
+                                <i class="fas fa-trash-alt mr-1"></i>Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            authorizedPersonsList.appendChild(personDiv);
+
+            // Set up image preview for person photo
+            const personPhotoInput = document.getElementById(`${personId}-photo`);
+            personPhotoInput.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    const reader = new FileReader();
+                    const previewDiv = document.getElementById(`${personId}-photo-preview`);
+                    const previewImg = document.getElementById(`${personId}-photo-preview-img`);
+                    
+                    reader.onload = function(event) {
+                        previewImg.src = event.target.result;
+                        previewDiv.classList.remove('hidden');
+                    }
+                    
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Add animation
+            setTimeout(() => {
+                personDiv.classList.remove('fade-in');
+            }, 300);
+        }
+
+        // Remove authorized person input field
+        authorizedPersonsList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-person') || e.target.closest('.remove-person')) {
+                const button = e.target.classList.contains('remove-person') ? e.target : e.target.closest('.remove-person');
+                const personId = button.getAttribute('data-person');
+                const personDiv = document.getElementById(`${personId}-name`).closest('.authorized-person');
+
+                personDiv.classList.add('fade-out');
+                setTimeout(() => {
+                    personDiv.remove();
+                    // Renumber remaining persons
+                    const persons = authorizedPersonsList.querySelectorAll('.authorized-person');
+                    persons.forEach((person, index) => {
+                        person.querySelector('label').textContent = `Authorized Person ${index + 1}`;
+                    });
+                }, 300);
+            }
+        });
+
+        // Function to remove photo preview
+        function removePhoto(inputId) {
+            const input = document.getElementById(inputId);
+            const previewDiv = document.getElementById(`${inputId}-preview`);
+            
+            input.value = '';
+            previewDiv.classList.add('hidden');
+        }
+
         // QR Code Generation
         parentForm.addEventListener('submit', (e) => {
             e.preventDefault();
 
             const parentName = document.getElementById('parentName').value;
             const parentPhone = document.getElementById('parentPhone').value;
-            const childInputs = childrenList.querySelectorAll('input[type="text"]');
-
+            const parentEmail = document.getElementById('parentEmail').value;
+            
+            // Get all children data
+            const children = [];
+            const childInputs = childrenList.querySelectorAll('.child-card');
+            
             if (childInputs.length === 0) {
                 Swal.fire({
                     icon: 'error',
@@ -236,17 +489,43 @@
                 return;
             }
 
-            // Get all children names
-            const children = [];
-            childInputs.forEach(input => {
-                children.push(input.value);
+            childInputs.forEach((childDiv, index) => {
+                const childId = `child-${index + 1}`;
+                children.push({
+                    name: document.getElementById(`${childId}-name`).value,
+                    age: document.getElementById(`${childId}-age`).value,
+                    school: document.getElementById(`${childId}-school`).value,
+                    course: document.getElementById(`${childId}-course`).value,
+                    photo: document.getElementById(`${childId}-photo`).files[0] ? 
+                          document.getElementById(`${childId}-photo-preview-img`).src : null
+                });
+            });
+
+            // Get all authorized persons data
+            const authorizedPersons = [];
+            const personInputs = authorizedPersonsList.querySelectorAll('.authorized-person');
+            
+            personInputs.forEach((personDiv, index) => {
+                const personId = `person-${index + 1}`;
+                authorizedPersons.push({
+                    name: document.getElementById(`${personId}-name`).value,
+                    relationship: document.getElementById(`${personId}-relationship`).value,
+                    phone: document.getElementById(`${personId}-phone`).value,
+                    photo: document.getElementById(`${personId}-photo`).files[0] ? 
+                          document.getElementById(`${personId}-photo-preview-img`).src : null
+                });
             });
 
             // Create a data object
             const data = {
-                parentName,
-                parentPhone,
+                parent: {
+                    name: parentName,
+                    phone: parentPhone,
+                    email: parentEmail,
+                    photo: parentPhoto.files[0] ? parentPhotoPreviewImg.src : null
+                },
                 children,
+                authorizedPersons,
                 timestamp: new Date().toISOString()
             };
 
@@ -255,16 +534,48 @@
 
             // Clear previous children list
             authorizedChildrenList.innerHTML = '';
+            authorizedPersonsDisplayList.innerHTML = '';
 
             // Add children to the authorized list
             children.forEach(child => {
                 const li = document.createElement('li');
-                li.className = 'flex items-center';
+                li.className = 'flex items-center py-2 border-b border-gray-100';
                 li.innerHTML = `
-                    <i class="fas fa-child text-purple-500 mr-2"></i>
-                    <span>${child}</span>
+                    <div class="flex items-center">
+                        ${child.photo ? `<img src="${child.photo}" class="w-10 h-10 rounded-full object-cover mr-3" alt="${child.name}">` : 
+                          `<div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mr-3">
+                            <i class="fas fa-child"></i>
+                          </div>`}
+                        <div>
+                            <span class="font-medium">${child.name}</span>
+                            <div class="text-xs text-gray-500">
+                                Age: ${child.age} | ${child.school}
+                            </div>
+                        </div>
+                    </div>
                 `;
                 authorizedChildrenList.appendChild(li);
+            });
+
+            // Add authorized persons to the display list
+            authorizedPersons.forEach(person => {
+                const li = document.createElement('li');
+                li.className = 'flex items-center py-2 border-b border-gray-100';
+                li.innerHTML = `
+                    <div class="flex items-center">
+                        ${person.photo ? `<img src="${person.photo}" class="w-10 h-10 rounded-full object-cover mr-3" alt="${person.name}">` : 
+                          `<div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mr-3">
+                            <i class="fas fa-user"></i>
+                          </div>`}
+                        <div>
+                            <span class="font-medium">${person.name}</span>
+                            <div class="text-xs text-gray-500">
+                                ${person.relationship} | ${person.phone}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                authorizedPersonsDisplayList.appendChild(li);
             });
 
             // Set parent name display
@@ -303,7 +614,7 @@
             const parentName = document.getElementById('parentName').value;
             const canvas = document.getElementById('parentQrCanvas');
             const link = document.createElement('a');
-            link.download = `${parentName}_parent_qr.png`;
+            link.download = `${parentName.replace(/\s+/g, '_')}_parent_qr.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
         });
