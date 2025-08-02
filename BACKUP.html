@@ -40,44 +40,6 @@
             margin-bottom: 1rem;
             border: 1px solid #e5e7eb;
         }
-        .loading-spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top: 4px solid #667eea;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .image-preview {
-            width: 80px;
-            height: 80px;
-            object-fit: cover;
-            border-radius: 50%;
-            border: 2px solid #e5e7eb;
-        }
-        .image-upload-container {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-top: 0.5rem;
-        }
-        .image-upload-btn {
-            background-color: #f3f4f6;
-            border: 1px dashed #d1d5db;
-            border-radius: 0.375rem;
-            padding: 0.5rem 1rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .image-upload-btn:hover {
-            background-color: #e5e7eb;
-            border-color: #9ca3af;
-        }
     </style>
 </head>
 <body class="min-h-screen bg-gray-100">
@@ -86,7 +48,7 @@
             <div class="flex justify-between items-center">
                 <div>
                     <h1 class="text-3xl md:text-4xl font-bold mb-2">Parent QR Generator</h1>
-                    <p class="text-lg opacity-90">Secure school pickup system with local CSV storage</p>
+                    <p class="text-lg opacity-90">Secure school pickup system</p>
                 </div>
             </div>
         </div>
@@ -111,19 +73,6 @@
                         <div>
                             <label class="block text-gray-700 font-medium mb-2" for="parentEmail">Email Address</label>
                             <input type="email" id="parentEmail" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Enter your email" required>
-                        </div>
-
-                        <div>
-                            <label class="block text-gray-700 font-medium mb-2">Parent Photo</label>
-                            <div class="image-upload-container">
-                                <img id="parentPhotoPreview" src="https://via.placeholder.com/80" alt="Parent photo preview" class="image-preview">
-                                <div>
-                                    <label for="parentPhoto" class="image-upload-btn">
-                                        <i class="fas fa-camera mr-2"></i>Upload Photo
-                                    </label>
-                                    <input type="file" id="parentPhoto" accept="image/*" class="hidden">
-                                </div>
-                            </div>
                         </div>
 
                         <div id="childrenContainer">
@@ -152,11 +101,9 @@
                             </div>
                         </div>
 
-                        <div>
-                            <button type="submit" id="submitBtn" class="w-full gradient-bg text-white py-3 rounded-lg font-semibold hover:opacity-90 transition flex items-center justify-center">
-                                <i class="fas fa-qrcode mr-2"></i> Generate Parent QR Code
-                            </button>
-                        </div>
+                        <button type="submit" class="w-full gradient-bg text-white py-3 rounded-lg font-semibold hover:opacity-90 transition flex items-center justify-center">
+                            <i class="fas fa-qrcode mr-2"></i> Generate Parent QR Code
+                        </button>
                     </form>
                 </div>
                 <div class="md:w-1/2 bg-gray-50 p-8">
@@ -203,14 +150,14 @@
                     <i class="fas fa-shield-alt text-3xl"></i>
                 </div>
                 <h3 class="text-xl font-bold mb-2">Secure Verification</h3>
-                <p class="text-gray-600">Your QR code contains encrypted information stored securely in local CSV files.</p>
+                <p class="text-gray-600">Your QR code contains encrypted information that can only be verified by authorized school staff.</p>
             </div>
             <div class="bg-white p-6 rounded-xl shadow-md">
                 <div class="text-purple-600 mb-4">
-                    <i class="fas fa-file-csv text-3xl"></i>
+                    <i class="fas fa-user-check text-3xl"></i>
                 </div>
-                <h3 class="text-xl font-bold mb-2">Local Storage</h3>
-                <p class="text-gray-600">All data is securely stored in CSV files on your device for easy access.</p>
+                <h3 class="text-xl font-bold mb-2">All Children Included</h3>
+                <p class="text-gray-600">One QR code authorizes you to pick up all your registered children for convenience.</p>
             </div>
             <div class="bg-white p-6 rounded-xl shadow-md">
                 <div class="text-purple-600 mb-4">
@@ -247,36 +194,15 @@
         const authorizedPersonsList = document.getElementById('authorizedPersonsList');
         const addPersonBtn = document.getElementById('addPersonBtn');
         const authorizedPersonsDisplayList = document.getElementById('authorizedPersonsDisplayList');
-        const submitBtn = document.getElementById('submitBtn');
-        const parentPhoto = document.getElementById('parentPhoto');
-        const parentPhotoPreview = document.getElementById('parentPhotoPreview');
 
         // Track child and person counts for unique IDs
         let childCount = 0;
         let personCount = 0;
 
-        // Store image data
-        let parentImageData = null;
-        const childrenImages = {};
-        const authorizedPersonsImages = {};
-
         // Add first child input by default
         document.addEventListener('DOMContentLoaded', () => {
             addChildInput();
             addAuthorizedPerson();
-        });
-
-        // Handle parent photo upload
-        parentPhoto.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    parentPhotoPreview.src = event.target.result;
-                    parentImageData = event.target.result.split(',')[1]; // Store base64 data
-                };
-                reader.readAsDataURL(file);
-            }
         });
 
         // Add child input field
@@ -320,18 +246,6 @@
                             class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                             placeholder="Enter course name">
                     </div>
-                    <div>
-                        <label class="block text-sm text-gray-600 mb-1">Child Photo</label>
-                        <div class="image-upload-container">
-                            <img id="${childId}-photo-preview" src="https://via.placeholder.com/80" alt="Child photo preview" class="image-preview">
-                            <div>
-                                <label for="${childId}-photo" class="image-upload-btn">
-                                    <i class="fas fa-camera mr-2"></i>Upload Photo
-                                </label>
-                                <input type="file" id="${childId}-photo" accept="image/*" class="hidden" data-child="${childId}">
-                            </div>
-                        </div>
-                    </div>
                 </div>
             `;
 
@@ -341,20 +255,6 @@
             setTimeout(() => {
                 childDiv.classList.remove('fade-in');
             }, 300);
-
-            // Add event listener for child photo upload
-            document.getElementById(`${childId}-photo`).addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                const childId = this.getAttribute('data-child');
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        document.getElementById(`${childId}-photo-preview`).src = event.target.result;
-                        childrenImages[childId] = event.target.result.split(',')[1]; // Store base64 data
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
         }
 
         // Remove child input field
@@ -367,10 +267,6 @@
                 childDiv.classList.add('fade-out');
                 setTimeout(() => {
                     childDiv.remove();
-                    // Remove image data if exists
-                    if (childrenImages[childId]) {
-                        delete childrenImages[childId];
-                    }
                     // Renumber remaining children
                     const children = childrenList.querySelectorAll('.child-card');
                     children.forEach((child, index) => {
@@ -415,18 +311,6 @@
                             class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                             placeholder="Enter phone number" required>
                     </div>
-                    <div>
-                        <label class="block text-sm text-gray-600 mb-1">Person Photo</label>
-                        <div class="image-upload-container">
-                            <img id="${personId}-photo-preview" src="https://via.placeholder.com/80" alt="Person photo preview" class="image-preview">
-                            <div>
-                                <label for="${personId}-photo" class="image-upload-btn">
-                                    <i class="fas fa-camera mr-2"></i>Upload Photo
-                                </label>
-                                <input type="file" id="${personId}-photo" accept="image/*" class="hidden" data-person="${personId}">
-                            </div>
-                        </div>
-                    </div>
                 </div>
             `;
 
@@ -436,20 +320,6 @@
             setTimeout(() => {
                 personDiv.classList.remove('fade-in');
             }, 300);
-
-            // Add event listener for person photo upload
-            document.getElementById(`${personId}-photo`).addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                const personId = this.getAttribute('data-person');
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        document.getElementById(`${personId}-photo-preview`).src = event.target.result;
-                        authorizedPersonsImages[personId] = event.target.result.split(',')[1]; // Store base64 data
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
         }
 
         // Remove authorized person input field
@@ -462,10 +332,6 @@
                 personDiv.classList.add('fade-out');
                 setTimeout(() => {
                     personDiv.remove();
-                    // Remove image data if exists
-                    if (authorizedPersonsImages[personId]) {
-                        delete authorizedPersonsImages[personId];
-                    }
                     // Renumber remaining persons
                     const persons = authorizedPersonsList.querySelectorAll('.authorized-person');
                     persons.forEach((person, index) => {
@@ -475,8 +341,8 @@
             }
         });
 
-        // QR Code Generation and CSV Storage
-        parentForm.addEventListener('submit', async (e) => {
+        // QR Code Generation
+        parentForm.addEventListener('submit', (e) => {
             e.preventDefault();
 
             const parentName = document.getElementById('parentName').value;
@@ -499,12 +365,10 @@
             childInputs.forEach((childDiv, index) => {
                 const childId = `child-${index + 1}`;
                 children.push({
-                    id: childId,
                     name: document.getElementById(`${childId}-name`).value,
                     age: document.getElementById(`${childId}-age`).value,
                     school: document.getElementById(`${childId}-school`).value,
-                    course: document.getElementById(`${childId}-course`).value,
-                    photo: childrenImages[childId] || null
+                    course: document.getElementById(`${childId}-course`).value
                 });
             });
 
@@ -515,11 +379,9 @@
             personInputs.forEach((personDiv, index) => {
                 const personId = `person-${index + 1}`;
                 authorizedPersons.push({
-                    id: personId,
                     name: document.getElementById(`${personId}-name`).value,
                     relationship: document.getElementById(`${personId}-relationship`).value,
-                    phone: document.getElementById(`${personId}-phone`).value,
-                    photo: authorizedPersonsImages[personId] || null
+                    phone: document.getElementById(`${personId}-phone`).value
                 });
             });
 
@@ -528,127 +390,89 @@
                 parent: {
                     name: parentName,
                     phone: parentPhone,
-                    email: parentEmail,
-                    photo: parentImageData
+                    email: parentEmail
                 },
                 children,
                 authorizedPersons,
                 timestamp: new Date().toISOString()
             };
 
-            // Generate a unique ID for this QR code
-            const qrCodeId = generateUniqueId();
-            data.qrCodeId = qrCodeId;
-
             // Convert to JSON string for QR code
             const qrDataString = JSON.stringify(data);
 
-            // Show loading state
-            const originalBtnText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<div class="loading-spinner"></div>';
+            // Clear previous children list
+            authorizedChildrenList.innerHTML = '';
+            authorizedPersonsDisplayList.innerHTML = '';
 
-            try {
-                // Save data to CSV
-                saveDataToCSV(data);
-
-                // Clear previous children list
-                authorizedChildrenList.innerHTML = '';
-                authorizedPersonsDisplayList.innerHTML = '';
-
-                // Add children to the authorized list
-                children.forEach(child => {
-                    const li = document.createElement('li');
-                    li.className = 'flex items-center py-2 border-b border-gray-100';
-                    li.innerHTML = `
-                        <div class="flex items-center">
-                            <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mr-3">
-                                ${child.photo ? 
-                                 `<img src="data:image/jpeg;base64,${child.photo}" class="w-full h-full rounded-full object-cover">` : 
-                                 `<i class="fas fa-child"></i>`}
-                            </div>
-                            <div>
-                                <span class="font-medium">${child.name}</span>
-                                <div class="text-xs text-gray-500">
-                                    Age: ${child.age} | ${child.school}
-                                </div>
+            // Add children to the authorized list
+            children.forEach(child => {
+                const li = document.createElement('li');
+                li.className = 'flex items-center py-2 border-b border-gray-100';
+                li.innerHTML = `
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mr-3">
+                            <i class="fas fa-child"></i>
+                        </div>
+                        <div>
+                            <span class="font-medium">${child.name}</span>
+                            <div class="text-xs text-gray-500">
+                                Age: ${child.age} | ${child.school}
                             </div>
                         </div>
-                    `;
-                    authorizedChildrenList.appendChild(li);
-                });
+                    </div>
+                `;
+                authorizedChildrenList.appendChild(li);
+            });
 
-                // Add authorized persons to the display list
-                authorizedPersons.forEach(person => {
-                    const li = document.createElement('li');
-                    li.className = 'flex items-center py-2 border-b border-gray-100';
-                    li.innerHTML = `
-                        <div class="flex items-center">
-                            <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mr-3">
-                                ${person.photo ? 
-                                 `<img src="data:image/jpeg;base64,${person.photo}" class="w-full h-full rounded-full object-cover">` : 
-                                 `<i class="fas fa-user"></i>`}
-                            </div>
-                            <div>
-                                <span class="font-medium">${person.name}</span>
-                                <div class="text-xs text-gray-500">
-                                    ${person.relationship} | ${person.phone}
-                                </div>
+            // Add authorized persons to the display list
+            authorizedPersons.forEach(person => {
+                const li = document.createElement('li');
+                li.className = 'flex items-center py-2 border-b border-gray-100';
+                li.innerHTML = `
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mr-3">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <span class="font-medium">${person.name}</span>
+                            <div class="text-xs text-gray-500">
+                                ${person.relationship} | ${person.phone}
                             </div>
                         </div>
-                    `;
-                    authorizedPersonsDisplayList.appendChild(li);
-                });
+                    </div>
+                `;
+                authorizedPersonsDisplayList.appendChild(li);
+            });
 
-                // Set parent name display
-                displayParentName.textContent = parentName;
+            // Set parent name display
+            displayParentName.textContent = parentName;
 
-                // Generate QR code
-                QRCode.toCanvas(document.getElementById('parentQrCanvas'), qrDataString, {
-                    width: 220,
-                    margin: 2,
-                    color: {
-                        dark: '#000000',
-                        light: '#ffffff'
-                    }
-                }, (error) => {
-                    if (error) {
-                        console.error(error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'Failed to generate QR code. Please try again.'
-                        });
-                        return;
-                    }
-
-                    // Show the QR code
-                    qrPlaceholder.classList.add('hidden');
-                    qrResult.classList.remove('hidden');
-
-                    // Scroll to the QR code
-                    qrResult.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-                    // Show success message with QR Code ID
+            // Generate QR code
+            QRCode.toCanvas(document.getElementById('parentQrCanvas'), qrDataString, {
+                width: 220,
+                margin: 2,
+                color: {
+                    dark: '#000000',
+                    light: '#ffffff'
+                }
+            }, (error) => {
+                if (error) {
+                    console.error(error);
                     Swal.fire({
-                        icon: 'success',
-                        title: 'QR Code Generated!',
-                        html: `Your data has been saved successfully.<br><br>
-                              <strong>QR Code ID:</strong> ${qrCodeId}<br>
-                              <small>Use this ID to verify the QR code later.</small>`,
-                        confirmButtonText: 'OK'
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to generate QR code. Please try again.'
                     });
-                });
-            } catch (error) {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Failed to save data. Please try again.'
-                });
-            } finally {
-                // Restore button text
-                submitBtn.innerHTML = originalBtnText;
-            }
+                    return;
+                }
+
+                // Show the QR code
+                qrPlaceholder.classList.add('hidden');
+                qrResult.classList.remove('hidden');
+
+                // Scroll to the QR code
+                qrResult.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
         });
 
         // Download QR Code
@@ -660,37 +484,6 @@
             link.href = canvas.toDataURL('image/png');
             link.click();
         });
-
-        // Save data to CSV file
-        function saveDataToCSV(data) {
-    const scriptURL = "https://script.google.com/macros/s/AKfycbyfdCuBpHnYmdEMgGDb8lZ0SGJtUXCqZoSQ0-5msS-7fX8TXiDWSuE8_AiP8PwalBM/exec"; // Replace this with the URL from Step 2
-
-    fetch(scriptURL, {
-        method: 'POST',
-        body: JSON.stringify(data),
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => response.text())
-    .then(result => {
-        console.log("Data saved to Google Sheet:", result);
-    })
-    .catch(error => {
-        console.error('Error sending data to Google Apps Script:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Failed to send data to Google Sheets.'
-        });
-    });
-}
-
-
-        // Generate a unique ID for QR codes
-        function generateUniqueId() {
-            return 'qr-' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
-        }
     </script>
 </body>
 </html>
